@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Έλεγχος σάρωσης — {{ S.title }}{% endblock %}
+{% block body %}
+<h1 class="page-title">Έλεγχος πριν την καταχώρηση</h1>
+{% for e in errors %}<div class="toast-err mt-3">{{ icon('circle-alert') }} <span>{{ e }}</span></div>{% endfor %}
+{% if transfers %}<p class="mt-3 flex items-center gap-2 text-body-md muted">{{ icon('info', 'icon-sm') }} Παραλείφθηκαν {{ transfers }} μεταφορές μεταξύ δικών σου λογαριασμών (top-up, pockets, αποταμίευση) — δεν είναι έσοδα ή έξοδα.</p>{% endif %}
+
+{% if rows %}
+{% if dups %}<div class="warn-card mt-3 flex items-start gap-2 text-body-md">{{ icon('triangle-alert', 'icon-sm mt-0.5 text-warning-pending') }}<span>{{ 'Βρέθηκε' if dups == 1 else 'Βρέθηκαν' }} <b>{{ dups }} {{ 'διπλή' if dups == 1 else 'διπλές' }}</b> (ίδιο όνομα, ημερομηνία και ποσό) — δεν {{ 'έχει' if dups == 1 else 'έχουν' }} επιλεγεί. Όλες οι άλλες είναι νέες κινήσεις.</span></div>{% endif %}
+<p class="mb-4 mt-2 text-body-md muted">Διόρθωσε ό,τι χρειάζεται. Μόνο οι γραμμές με ✓ καταχωρούνται.</p>
+<form method="post" action="{{ url_for('scan_import') }}">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  <input type="hidden" name="count" value="{{ rows|length }}">
+  <div class="flex flex-col gap-3">
+    {% for r in rows %}
+    <div class="rrow card p-4 {{ 'border-warning-pending/50 bg-warning-pending/5' if r.dup or r.dup_in_scan }}">
+      <div class="grid grid-cols-[auto_1fr] items-center gap-3 lg:grid-cols-[auto_150px_130px_minmax(0,1fr)_minmax(0,1.3fr)]">
+        <label class="grid h-10 w-10 place-items-center"><input type="checkbox" name="r{{ loop.index0 }}_use" value="1" {{ '' if r.dup or r.dup_in_scan else 'checked' }} class="h-5 w-5 rounded border-border-light text-primary focus:ring-primary"></label>
+        <input type="date" name="r{{ loop.index0 }}_date" value="{{ r.tdate }}" required class="input input-sm h-10" aria-label="Ημερομηνία">
+        <input name="r{{ loop.index0 }}_amount" value="{{ plain(r.amount_cents) }}" inputmode="decimal" required aria-label="Ποσό"
+               class="input input-sm h-10 num col-start-2 lg:col-start-auto {{ 'text-income-positive' if r.kind == 'income' else 'text-expense-negative' }}">
+        <select name="r{{ loop.index0 }}_cat" aria-label="Κατηγορία" class="input input-sm h-10 col-start-2 lg:col-start-auto {{ '' if r.guessed else 'border-warning-pending' }}">
+          <optgroup label="Έξοδα">{% for c in cats if c.kind == 'expense' %}<option value="{{ c.id }}" {{ 'selected' if c.id == r.category_id }}>{{ c.icon }} {{ c.name }}</option>{% endfor %}</optgroup>
+          <optgroup label="Έσοδα">{% for c in cats if c.kind == 'income' %}<option value="{{ c.id }}" {{ 'selected' if c.id == r.category_id }}>{{ c.icon }} {{ c.name }}</option>{% endfor %}</optgroup>
+        </select>
+        <input name="r{{ loop.index0 }}_note" value="{{ r.note }}" maxlength="200" aria-label="Περιγραφή" class="input input-sm h-10 col-start-2 lg:col-start-auto">
+      </div>
+      <div class="mt-2 flex flex-wrap gap-2 pl-[52px] text-body-sm">
+        <span class="badge-muted">{{ {'receipt': '🧾', 'invoice': '🧾', 'bank_statement': '🏦'}.get(r.doc_type, '📄') }} {{ r.source }}</span>
+        {% if r.dup %}<span class="badge-warn">⚠ υπάρχει ήδη: {{ r.dup.tdate[8:] }}/{{ r.dup.tdate[5:7] }} · {{ r.dup.note or r.dup.cat_name }} · {{ money(r.dup.amount_cents) }}</span>{% endif %}
+        {% if r.dup_in_scan %}<span class="badge-warn">⚠ ίδια γραμμή 2η φορά σε αυτή τη σάρωση</span>{% endif %}
+        {% if r.remembered %}<span class="badge-muted">🧠 όπως την προηγούμενη φορά</span>
+        {% elif not r.guessed %}<span class="badge-warn">κατηγορία: έλεγξέ τη</span>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="sticky bottom-16 z-10 mt-4 flex items-center justify-between gap-3 rounded-xl border border-border-light bg-surface-light/95 p-3 backdrop-blur dark:border-border-dark dark:bg-surface-subtle-dark/95 lg:bottom-4">
+    <span class="text-body-md secondary">{{ rows|rejectattr('dup')|rejectattr('dup_in_scan')|list|length }} από {{ rows|length }} προεπιλεγμένες</span>
+    <div class="flex gap-2">
+      <a class="btn-secondary" href="{{ url_for('scan_page') }}">Ακύρωση</a>
+      <button class="btn-primary">Καταχώρηση επιλεγμένων</button>
+    </div>
+  </div>
+</form>
+{% else %}
+<div class="empty mt-4"><p class="text-title-md">Δεν βρέθηκε κάτι για καταχώρηση</p>
+  <a class="btn-primary mt-4" href="{{ url_for('scan_page') }}">Δοκίμασε ξανά</a></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Oikonomy mark: a home (oikos) resting on a balance beam; green door = money kept at home. -->
+  <g fill="none" stroke="#2563EB" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 27 L32 6 L55 27"/>
+    <path d="M16 21 V39 a5 5 0 0 0 5 5 H43 a5 5 0 0 0 5 -5 V21"/>
+  </g>
+  <rect x="28" y="30" width="8" height="12.5" rx="1.5" fill="#15803D"/>
+  <rect x="5" y="49" width="54" height="5" rx="2.5" fill="#2563EB"/>
+  <path d="M32 56 L37.5 62 H26.5 Z" fill="#2563EB" stroke="#2563EB" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>

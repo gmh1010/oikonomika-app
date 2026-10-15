@@ -1,0 +1,21 @@
+# personal finance files — never commit
+*.xlsx
+*.xls
+*.csv
+budget_*.py
+make_budget.py
+# secrets & local data
+.env
+*.env
+*.db
+*.db-*
+*.sqlite
+# python
+__pycache__/
+.pytest_cache/
+*.pyc
+.venv/
+# tooling
+.playwright-mcp/
+.worktrees/
+.secrets/

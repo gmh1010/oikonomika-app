@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block topbar %}{% set endpoint = 'dashboard' %}{% set extra = {} %}{% include "_monthbar.html" %}{% endblock %}
+{% block body %}
+{% set planned_net = s.budget_net %}
+<section class="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+  <div class="kpi">
+    <div class="kpi-label">Έσοδα {{ icon('arrow-down-left', 'icon-sm text-income-positive') }}</div>
+    <div class="kpi-value pos">+ {{ money(s.income) }}</div>
+    <div class="kpi-sub"><span>στόχος {{ money(s.budget_income) }}</span></div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Έξοδα {{ icon('arrow-up-right', 'icon-sm text-expense-negative') }}</div>
+    <div class="kpi-value neg">− {{ money(s.expense) }}</div>
+    <div class="kpi-sub"><span>όριο {{ money(s.budget_expense) }}</span>
+      {% if s.budget_expense %}<span>{{ (s.expense * 100 / s.budget_expense)|round(1) }}%</span>{% endif %}</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Αποτέλεσμα μήνα {{ icon('piggy-bank', 'icon-sm text-primary') }}</div>
+    <div class="kpi-value {{ 'pos' if s.net >= 0 else 'neg' }}">{{ '+' if s.net >= 0 else '−' }} {{ money(s.net|abs) }}</div>
+    <div class="kpi-sub"><span>πλάνο {{ money(planned_net) }}</span></div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Υπόλοιπο τέλους μήνα {{ icon('wallet', 'icon-sm text-primary') }}</div>
+    <div class="kpi-value {{ 'neg' if balance < 0 }}">{{ money(balance) }}</div>
+    <div class="kpi-sub"><span>με αρχικό {{ money(S.opening_balance_cents|int) }}</span></div>
+  </div>
+</section>
+
+{% if pending %}
+<section class="warn-card mt-4">
+  <form method="post" action="{{ url_for('recurring_post') }}" class="flex flex-col gap-3 lg:flex-row lg:items-center">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="m" value="{{ month }}">
+    <div class="flex-1">
+      <h2 class="mb-2 flex items-center gap-2 text-title-md text-warning-pending">{{ icon('triangle-alert') }} Πάγια που δεν έχουν περαστεί ({{ pending|length }})</h2>
+      <ul class="flex flex-col gap-1 lg:flex-row lg:flex-wrap lg:gap-x-5">
+      {% for r in pending %}
+        <li><label class="flex items-center gap-2 text-body-md">
+          <input type="checkbox" name="ids" value="{{ r.id }}" checked class="h-5 w-5 rounded border-border-light text-warning-pending focus:ring-warning-pending">
+          <span class="flex-1">{{ '%02d'|format(r.due_day) }}/{{ month[5:] }} · {{ r.name }}</span>
+          <b class="num {{ 'pos' if r.kind == 'income' else 'neg' }}">{{ '+' if r.kind == 'income' else '−' }}{{ money(r.amount_cents) }}</b></label></li>
+      {% endfor %}
+      </ul>
+    </div>
+    <button class="btn-warn">Πέρασε τα επιλεγμένα</button>
+  </form>
+</section>
+{% endif %}
+
+<div class="mt-4 grid gap-4 lg:grid-cols-[1.15fr_1fr]">
+  <div class="flex flex-col gap-4">
+    <section class="card">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="card-title">Γρήγορη καταχώρηση</h2>
+        <a class="link text-label-md" href="{{ url_for('scan_page') }}">📷 ή σάρωσε απόδειξη</a>
+      </div>
+      <form method="post" action="{{ url_for('tx_add') }}" class="grid gap-3 sm:grid-cols-2" data-kind-form>
+        <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+        <input type="hidden" name="next" value="{{ url_for('dashboard', m=month) }}">
+        <div class="seg sm:col-span-2">
+          <label><input type="radio" name="kind" value="expense" checked><span class="exp">− Έξοδο</span></label>
+          <label><input type="radio" name="kind" value="income"><span class="inc">+ Έσοδο</span></label>
+        </div>
+        <label><span class="label">Ποσό ({{ S.currency }})</span>
+          <input name="amount" inputmode="decimal" placeholder="0,00" required class="input num" autocomplete="off"></label>
+        <label><span class="label">Κατηγορία</span>
+          <select name="category_id" required class="input">
+            {% for c in cats_expense %}<option value="{{ c.id }}" data-kind="expense">{{ c.icon }} {{ c.name }}</option>{% endfor %}
+            {% for c in cats_income %}<option value="{{ c.id }}" data-kind="income">{{ c.icon }} {{ c.name }}</option>{% endfor %}
+          </select></label>
+        <label><span class="label">Ημερομηνία</span><input type="date" name="tdate" value="{{ today }}" required class="input"></label>
+        <label><span class="label">Σημείωση</span><input name="note" placeholder="Σημείωση (προαιρετικό)" maxlength="200" class="input"></label>
+        <button class="btn-primary btn-block sm:col-span-2">Καταχώρηση</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="mb-3 flex items-start justify-between">
+        <div><h2 class="card-title">Έξοδα ανά κατηγορία</h2><p class="text-body-sm muted">Πρόοδος μηνιαίου προϋπολογισμού</p></div>
+        <div class="text-right"><div class="num text-title-md">{{ money(s.expense) }}</div>
+          {% if s.budget_expense %}<div class="text-body-sm muted">από {{ money(s.budget_expense) }}</div>{% endif %}</div>
+      </div>
+      {% set shown = namespace(n=0) %}
+      {% for c in s.categories if c.kind == 'expense' and (c.actual or c.budget_cents) %}
+        {% set shown.n = shown.n + 1 %}
+        {% set pct = (c.actual * 100 / c.budget_cents) if c.budget_cents else ((c.actual * 100 / s.expense) if s.expense else 0) %}
+        <a class="block py-2.5" href="{{ url_for('transactions', m=month, cat=c.id) }}">
+          <div class="flex items-center justify-between gap-2 text-label-lg">
+            <span class="flex min-w-0 items-center gap-2"><span class="w-5 text-center">{{ c.icon or '•' }}</span><span class="truncate">{{ c.name }}</span>
+              {% if c.budget_cents and pct > 100 %}<span class="badge-bad">+{{ (pct - 100)|round|int }}%</span>{% endif %}</span>
+            <span class="num {{ 'neg' if c.budget_cents and pct > 100 }}">{{ money(c.actual) }}{% if c.budget_cents %} <span class="muted">/ {{ plain(c.budget_cents) }}</span>{% endif %}</span>
+          </div>
+          <div class="track"><div class="fill {{ 'fill-over' if c.budget_cents and pct > 100 }} {{ 'opacity-40' if not c.budget_cents }}" style="width:{{ [pct, 100]|min }}%;{% if not (c.budget_cents and pct > 100) %}background:{{ c.color }}{% endif %}"></div></div>
+          {% if not c.budget_cents %}<p class="mt-1 text-body-sm muted">χωρίς όριο · {{ pct|round|int }}% των εξόδων</p>{% endif %}
+        </a>
+      {% endfor %}
+      {% if not shown.n %}<p class="py-4 text-body-md muted">Καμία κίνηση ακόμα. Βάλε όρια στις <a class="link" href="{{ url_for('categories') }}">κατηγορίες</a>.</p>{% endif %}
+    </section>
+
+    <section class="card">
+      <div class="mb-3 flex items-center justify-between"><h2 class="card-title">Έσοδα μήνα</h2><span class="num text-title-md pos">{{ money(s.income) }}</span></div>
+      {% for c in s.categories if c.kind == 'income' and (c.actual or c.budget_cents) %}
+        {% set pct = (c.actual * 100 / c.budget_cents) if c.budget_cents else 100 %}
+        <a class="block py-2.5" href="{{ url_for('transactions', m=month, cat=c.id) }}">
+          <div class="flex items-center justify-between gap-2 text-label-lg">
+            <span class="flex items-center gap-2"><span class="w-5 text-center">{{ c.icon or '•' }}</span>{{ c.name }}</span>
+            <span class="num pos">{{ money(c.actual) }}{% if c.budget_cents %} <span class="muted">/ {{ plain(c.budget_cents) }}</span>{% endif %}</span>
+          </div>
+          <div class="track"><div class="fill bg-income-positive" style="width:{{ [pct, 100]|min }}%"></div></div>
+        </a>
+      {% else %}
+        <p class="py-2 text-body-md muted">Κανένα έσοδο ακόμα αυτόν τον μήνα.</p>
+      {% endfor %}
+    </section>
+  </div>
+
+  <div class="flex flex-col gap-4">
+    <section class="card">
+      <div class="mb-4 flex items-start justify-between">
+        <div><h2 class="card-title">Τελευταίοι 6 μήνες</h2><p class="text-body-sm muted">Έσοδα vs Έξοδα</p></div>
+        <div class="flex gap-3 text-body-sm muted"><span class="flex items-center gap-1"><i class="h-2.5 w-2.5 rounded-sm bg-income-positive"></i>Έσοδα</span><span class="flex items-center gap-1"><i class="h-2.5 w-2.5 rounded-sm bg-expense-negative"></i>Έξοδα</span></div>
+      </div>
+      <div class="flex h-44 items-stretch gap-2">
+        {% for t in trend %}
+        <a href="{{ url_for('dashboard', m=t.month) }}" class="flex flex-1 flex-col items-center rounded-lg px-1 pt-1 {{ 'bg-surface-subtle-light ring-1 ring-border-light dark:bg-surface-dark dark:ring-border-dark' if t.month == month }}" title="Έσοδα {{ money(t.income) }} · Έξοδα {{ money(t.expense) }}">
+          <div class="flex w-full flex-1 items-end justify-center gap-1">
+            <div class="w-3 rounded-t bg-income-positive" style="height:{{ (t.income * 100 / peak)|round(1) }}%"></div>
+            <div class="w-3 rounded-t bg-expense-negative" style="height:{{ (t.expense * 100 / peak)|round(1) }}%"></div>
+          </div>
+          <span class="mt-1 text-body-sm {{ 'font-semibold text-primary' if t.month == month else 'muted' }}">{{ month_short(t.month) }}</span>
+          <span class="num text-[11px] {{ 'pos' if t.net >= 0 else 'neg' }}">{{ '+' if t.net >= 0 }}{{ plain(t.net)[:-3] }}€</span>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="mb-1 flex items-center justify-between">
+        <h2 class="card-title">Πρόσφατες κινήσεις</h2>
+        <a class="link text-label-md" href="{{ url_for('transactions', m=month) }}">Προβολή όλων</a>
+      </div>
+      {% if recent %}{% include "_txlist.html" %}{% else %}
+        <div class="empty mt-3"><p class="text-title-md">Ξεκίνα με την πρώτη σου κίνηση</p>
+          <p class="mt-1 text-body-md muted">Πάτα «＋» ή <a class="link" href="{{ url_for('categories') }}">φτιάξε τις κατηγορίες σου</a>.</p></div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+<footer class="mt-8 flex flex-wrap items-center justify-between gap-2 border-t border-border-light pt-4 text-body-sm muted dark:border-border-dark">
+  <span>Εξαγωγή μήνα: <a class="link" href="{{ url_for('export_xlsx', m=month) }}">Excel (.xlsx)</a> · <a class="link" href="{{ url_for('export_csv', m=month) }}">CSV</a></span>
+  <span>{{ S.title }}</span>
+</footer>
+{% endblock %}

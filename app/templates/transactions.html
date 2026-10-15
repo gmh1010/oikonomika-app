@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Κινήσεις — {{ S.title }}{% endblock %}
+{% block body %}
+<div class="mb-4 flex flex-wrap items-end justify-between gap-2">
+  <div>
+    <h1 class="page-title">Κινήσεις</h1>
+    <p class="text-body-md muted">{{ rows|length }} κινήσεις{% if month %} · {{ month_label(month) }}{% endif %}</p>
+  </div>
+  <p class="text-body-sm muted">Εξαγωγή: <a class="link" href="{{ url_for('export_xlsx', m=month) }}">Excel</a> · <a class="link" href="{{ url_for('export_csv', m=month) }}">CSV</a></p>
+</div>
+
+<section class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+  <div class="kpi"><div class="kpi-label">Έσοδα <i class="h-2 w-2 rounded-full bg-income-positive"></i></div><div class="kpi-value pos">+ {{ money(inc) }}</div></div>
+  <div class="kpi"><div class="kpi-label">Έξοδα <i class="h-2 w-2 rounded-full bg-expense-negative"></i></div><div class="kpi-value neg">− {{ money(exp) }}</div></div>
+  <div class="kpi"><div class="kpi-label">Διαφορά {{ icon('trending-up', 'icon-sm') }}</div><div class="kpi-value {{ 'pos' if inc - exp >= 0 else 'neg' }}">{{ '+' if inc - exp >= 0 else '−' }} {{ money((inc - exp)|abs) }}</div></div>
+  <div class="kpi"><div class="kpi-label">Κινήσεις {{ icon('list', 'icon-sm') }}</div><div class="kpi-value">{{ rows|length }}</div></div>
+</section>
+
+{% set active = (1 if month else 0) + (1 if kind else 0) + (1 if cat else 0) + (1 if q else 0) %}
+<details class="card mt-4 p-0 lg:open" {{ 'open' if active }}>
+  <summary class="flex cursor-pointer list-none items-center justify-between gap-2 px-5 py-3 lg:hidden">
+    <span class="flex items-center gap-2 text-label-lg">{{ icon('sliders-horizontal') }} Φίλτρα {% if active %}<span class="badge bg-primary text-white">{{ active }}</span>{% endif %}</span>
+    {{ icon('chevron-down', 'icon muted') }}
+  </summary>
+  <form method="get" class="grid gap-3 border-t border-border-light p-4 dark:border-border-dark sm:grid-cols-2 lg:grid-cols-[auto_auto_1fr_1.2fr_auto] lg:items-end lg:border-0">
+    <label><span class="label">Μήνας</span><input type="month" name="m" value="{{ month }}" class="input"></label>
+    <label><span class="label">Τύπος</span>
+      <select name="kind" class="input">
+        <option value="">Όλα</option>
+        <option value="expense" {{ 'selected' if kind == 'expense' }}>Έξοδα</option>
+        <option value="income" {{ 'selected' if kind == 'income' }}>Έσοδα</option>
+      </select></label>
+    <label><span class="label">Κατηγορία</span>
+      <select name="cat" class="input">
+        <option value="">Όλες οι κατηγορίες</option>
+        {% for c in cats %}<option value="{{ c.id }}" {{ 'selected' if cat == c.id }}>{{ c.icon }} {{ c.name }}{{ '' if c.active else ' (ανενεργή)' }}</option>{% endfor %}
+      </select></label>
+    <label class="relative"><span class="label">Αναζήτηση</span>
+      <input name="q" value="{{ q }}" placeholder="Σημείωση ή κατηγορία…" class="input pl-10">
+      <span class="pointer-events-none absolute bottom-3 left-3 muted">{{ icon('search') }}</span></label>
+    <div class="flex items-center gap-3">
+      <button class="btn-primary">Φίλτρο</button>
+      {% if active %}<a class="link text-label-md" href="{{ url_for('transactions') }}">Καθαρισμός</a>{% endif %}
+    </div>
+  </form>
+</details>
+
+{% if rows %}
+  {% for day, items in rows|groupby('tdate')|reverse %}
+    {% set day_net = items|selectattr('kind', 'equalto', 'income')|sum(attribute='amount_cents') - items|selectattr('kind', 'equalto', 'expense')|sum(attribute='amount_cents') %}
+    <section class="mt-5">
+      <h2 class="sticky top-0 z-10 -mx-4 flex items-center justify-between bg-background/95 px-4 py-2 text-label-lg backdrop-blur dark:bg-surface-dark/95 lg:mx-0 lg:px-0">
+        <span>{{ day[8:] }}/{{ day[5:7] }}/{{ day[:4] }} <span class="muted">({{ items|length }})</span></span>
+        <span class="num text-label-md {{ 'pos' if day_net >= 0 else 'neg' }}">Σύνολο: {{ '+' if day_net >= 0 else '−' }} {{ money(day_net|abs) }}</span>
+      </h2>
+      <div class="card-tight px-4">
+        {% with rows = items %}{% include "_txlist.html" %}{% endwith %}
+      </div>
+    </section>
+  {% endfor %}
+{% else %}
+  <div class="empty mt-5"><p class="text-title-md">Δεν βρέθηκαν κινήσεις</p>
+    <p class="mt-1 text-body-md muted">Άλλαξε τα φίλτρα ή πρόσθεσε μια νέα κίνηση με το «＋».</p></div>
+{% endif %}
+{% endblock %}

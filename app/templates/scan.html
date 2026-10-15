@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Σάρωση — {{ S.title }}{% endblock %}
+{% block body %}
+<h1 class="page-title">📷 Σάρωση απόδειξης / κινήσεων τράπεζας</h1>
+<p class="mb-4 text-body-md muted">🧾 Απόδειξη ή λογαριασμός → <b>μία</b> κίνηση με το σύνολο · 🏦 Screenshot ή PDF τράπεζας → <b>μία κίνηση για κάθε γραμμή</b>.</p>
+
+{% if not has_key %}
+  <div class="toast-err">{{ icon('circle-alert') }} Η σάρωση δεν είναι διαθέσιμη αυτή τη στιγμή.</div>
+{% endif %}
+
+<div class="grid gap-4 lg:grid-cols-[1fr_280px]">
+  <section class="card">
+    <form method="post" enctype="multipart/form-data" class="flex flex-col gap-4" id="scanform">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <label id="drop" class="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-border-light px-4 py-10 text-center transition dark:border-border-dark">
+        <input type="file" name="files" accept="image/jpeg,image/png,image/webp,application/pdf,.xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" multiple required id="files" class="sr-only">
+        <span class="grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-primary">{{ icon('file-up', 'h-7 w-7') }}</span>
+        <span id="droptext" class="text-body-md secondary"><b class="text-title-md">Διάλεξε αρχεία ή σύρε τα εδώ</b><br>
+          <small class="muted">έως 10 αρχεία · JPG, PNG, WEBP, PDF (έως 40 σελίδες — 1 σάρωση ανά 10) ή Excel/CSV τράπεζας (1 σάρωση ανά 200 γραμμές) · έως 10 MB το καθένα</small></span>
+      </label>
+      <div class="grid gap-2 sm:grid-cols-2">
+        <label class="btn-secondary cursor-pointer sm:hidden">{{ icon('camera', 'icon-sm') }} Βγάλε φωτογραφία
+          <input type="file" name="files" accept="image/*" capture="environment" class="sr-only" data-camera></label>
+        <button class="btn-primary sm:col-span-2" id="go">{{ icon('sparkles', 'icon-sm') }} Ανάγνωση</button>
+      </div>
+    </form>
+  </section>
+  <aside class="flex flex-col gap-4">
+    <section class="card">
+      <p class="text-label-md secondary">Σαρώσεις αυτόν τον μήνα</p>
+      <p class="num mt-1 text-headline-md">{{ used }} <span class="text-body-md muted">/ {{ quota }}</span></p>
+      <div class="track"><div class="fill {{ 'fill-over' if used >= quota else 'bg-primary' }}" style="width:{{ [used * 100 / quota, 100]|min if quota else 0 }}%"></div></div>
+    </section>
+    <section class="card text-body-sm muted">
+      <p class="flex gap-2">{{ icon('eye-off', 'icon-sm mt-0.5') }} Η εικόνα δεν αποθηκεύεται. Διαβάζεται από το Google Gemini και σβήνεται· η τοποθεσία (GPS) αφαιρείται πριν σταλεί.</p>
+      <p class="mt-2 flex gap-2">{{ icon('check', 'icon-sm mt-0.5') }} Τίποτα δεν καταχωρείται πριν το ελέγξεις.</p>
+    </section>
+  </aside>
+</div>
+{% endblock %}

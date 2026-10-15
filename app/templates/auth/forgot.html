@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block body %}
+<section class="auth-card">
+  <h1 class="text-headline-lg">Ξέχασα τον κωδικό</h1>
+  <p class="mb-5 mt-1 text-body-md muted">Γράψε το email σου και θα σου στείλουμε σύνδεσμο για νέο κωδικό.</p>
+  <form method="post" action="{{ url_for('auth.forgot') }}" class="flex flex-col gap-4">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <label><span class="label">Email</span><input type="email" name="email" autocomplete="email" required maxlength="254" autofocus class="input"></label>
+    {% include "auth/_turnstile.html" %}
+    <button class="btn-primary btn-block h-12">Στείλε μου σύνδεσμο</button>
+  </form>
+  <p class="mt-6 text-center"><a class="link text-label-lg" href="{{ url_for('auth.login') }}">Πίσω στη σύνδεση</a></p>
+</section>
+{% endblock %}

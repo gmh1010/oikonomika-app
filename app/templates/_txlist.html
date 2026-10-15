@@ -1,0 +1,15 @@
+{# Transaction rows. Uses `rows` if defined, else `recent`. #}
+<ul class="divide">
+{% for r in (rows if rows is defined else recent) %}
+  <li>
+    <a href="{{ url_for('tx_edit', tx_id=r.id, next=request.full_path) }}" class="row -mx-2 rounded-lg px-2 hover:bg-surface-subtle-light dark:hover:bg-surface-dark">
+      <span class="avatar bg-surface-container dark:bg-surface-dark">{{ r.icon or r.cat_name[:1] }}</span>
+      <span class="min-w-0 flex-1">
+        <span class="block truncate text-title-md">{{ r.cat_name }}</span>
+        <span class="block truncate text-body-sm muted">{{ r.tdate[8:] }}/{{ r.tdate[5:7] }}{% if r.note %} · {{ r.note }}{% endif %}</span>
+      </span>
+      <span class="num text-amount-row {{ 'pos' if r.kind == 'income' else 'neg' }}">{{ '+' if r.kind == 'income' else '−' }} {{ money(r.amount_cents) }}</span>
+    </a>
+  </li>
+{% endfor %}
+</ul>

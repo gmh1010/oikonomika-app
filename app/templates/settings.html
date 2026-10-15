@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Ρυθμίσεις — {{ S.title }}{% endblock %}
+{% block body %}
+<h1 class="page-title mb-4">Ρυθμίσεις</h1>
+<form method="post" class="flex max-w-2xl flex-col gap-4">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  <section class="card flex flex-col gap-4">
+    <h2 class="card-title">Εμφάνιση</h2>
+    <label><span class="label">Όνομα εφαρμογής</span><input name="title" value="{{ S.title }}" maxlength="40" class="input"></label>
+    <div>
+      <span class="label">Θέμα</span>
+      <div class="grid grid-cols-3 gap-1 rounded-lg bg-surface-container p-1 dark:bg-surface-dark seg">
+        <label><input type="radio" name="theme" value="auto" {{ 'checked' if S.theme == 'auto' }}><span class="plain gap-1">{{ icon('monitor', 'icon-sm') }} Αυτόματο</span></label>
+        <label><input type="radio" name="theme" value="light" {{ 'checked' if S.theme == 'light' }}><span class="plain gap-1">{{ icon('sun', 'icon-sm') }} Φωτεινό</span></label>
+        <label><input type="radio" name="theme" value="dark" {{ 'checked' if S.theme == 'dark' }}><span class="plain gap-1">{{ icon('moon', 'icon-sm') }} Σκοτεινό</span></label>
+      </div>
+    </div>
+    <label class="flex items-center justify-between gap-3"><span><span class="block text-label-lg">Χρώμα εφαρμογής</span><span class="text-body-sm muted">Κουμπιά, σύνδεσμοι, επιλογές</span></span>
+      <input type="color" name="accent" value="{{ S.accent }}" class="h-11 w-16 cursor-pointer rounded-lg border border-border-light p-1 dark:border-border-dark"></label>
+  </section>
+  <section class="card flex flex-col gap-4">
+    <h2 class="card-title">Οικονομικά</h2>
+    <label><span class="label">Νόμισμα</span><input name="currency" value="{{ S.currency }}" maxlength="4" class="input w-28"></label>
+    <label><span class="label">Αρχικό υπόλοιπο (πόσα είχες πριν την πρώτη κίνηση — μπορεί να είναι αρνητικό)</span>
+      <input name="opening_balance" inputmode="decimal" value="{{ ('-' if S.opening_balance_cents|int < 0 else '') ~ plain(S.opening_balance_cents|int|abs) }}" class="input num"></label>
+  </section>
+  <div class="sticky bottom-20 z-10 lg:static"><button class="btn-primary btn-block shadow-lg lg:w-auto lg:shadow-none">Αποθήκευση</button></div>
+</form>
+<section class="card mt-4 max-w-2xl">
+  <h2 class="card-title mb-2">Δεδομένα</h2>
+  <p class="mb-3 text-body-md muted">Κατέβασε όλες τις κινήσεις σου.</p>
+  <div class="flex flex-wrap gap-2">
+    <a class="btn-secondary" href="{{ url_for('export_xlsx') }}">{{ icon('file-spreadsheet', 'icon-sm') }} Excel (όλες)</a>
+    <a class="btn-secondary" href="{{ url_for('export_csv') }}">{{ icon('download', 'icon-sm') }} CSV</a>
+  </div>
+</section>
+{% endblock %}

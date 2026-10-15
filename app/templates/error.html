@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — {{ S.title }}{% endblock %}
+{% block body %}
+<section class="auth-card text-center">
+  <span class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-surface-container text-primary dark:bg-surface-dark">{{ icon('circle-alert', 'h-7 w-7') }}</span>
+  <h1 class="text-headline-md">{{ title }}</h1>
+  <p class="mt-2 text-body-md secondary">{{ text }}</p>
+  <p class="mt-2 text-body-sm muted">Κωδικός {{ code }}</p>
+  <a class="btn-primary btn-block mt-6" href="{{ url_for('dashboard') }}">{{ icon('house', 'icon-sm') }} Πίσω στην αρχική</a>
+</section>
+{% endblock %}

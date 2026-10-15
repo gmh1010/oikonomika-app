@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Πάγια — {{ S.title }}{% endblock %}
+{% block body %}
+<h1 class="page-title">Πάγια (κάθε μήνα)</h1>
+<p class="mb-4 text-body-md muted">Ό,τι μπαίνει ή βγαίνει κάθε μήνα. Δεν περνάνε ποτέ μόνα τους: στην αρχική σελίδα του μήνα βλέπεις ποια λείπουν και τα περνάς με ένα κλικ. Μπορείς επίσης να ανοίξεις οποιαδήποτε κίνηση και να πατήσεις «Κάν’ το πάγιο».</p>
+
+<section class="card">
+  <h2 class="card-title mb-3">Νέο πάγιο</h2>
+  <form method="post" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[auto_1fr_auto_1fr_auto_auto] lg:items-end" data-kind-form>
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <div class="seg sm:col-span-2 lg:col-span-1 lg:w-52">
+      <label><input type="radio" name="kind" value="expense" checked><span class="exp">− Έξοδο</span></label>
+      <label><input type="radio" name="kind" value="income"><span class="inc">+ Έσοδο</span></label>
+    </div>
+    <label><span class="label">Όνομα</span><input name="name" placeholder="π.χ. Netflix" required maxlength="60" class="input"></label>
+    <label><span class="label">Ποσό</span><input name="amount" inputmode="decimal" placeholder="0,00" required class="input w-full num lg:w-28"></label>
+    <label><span class="label">Κατηγορία</span>
+      <select name="category_id" required class="input">
+        {% for c in cats %}<option value="{{ c.id }}" data-kind="{{ c.kind }}">{{ c.icon }} {{ c.name }}</option>{% endfor %}
+      </select></label>
+    <label><span class="label">Ημέρα του μήνα</span><input type="number" name="day" min="1" max="31" value="1" class="input w-full lg:w-24" title="1–31 · αν ο μήνας έχει λιγότερες μέρες, μπαίνει την τελευταία"></label>
+    <button class="btn-primary">{{ icon('plus', 'icon-sm') }} Προσθήκη</button>
+  </form>
+  <p class="mt-2 text-body-sm muted">«Ημέρα του μήνα» = πότε πέφτει κάθε μήνα (1–31). Αν ο μήνας έχει λιγότερες μέρες (π.χ. 31 τον Φεβρουάριο), μπαίνει την τελευταία του μέρα.</p>
+</section>
+
+<section class="card mt-4">
+  {% set inc = items|selectattr('active')|selectattr('kind', 'equalto', 'income')|sum(attribute='amount_cents') %}
+  {% set exp = items|selectattr('active')|selectattr('kind', 'equalto', 'expense')|sum(attribute='amount_cents') %}
+  <div class="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+    <h2 class="card-title">Λίστα</h2>
+    <p class="text-body-sm muted">έσοδα <span class="num pos">{{ money(inc) }}</span> · έξοδα <span class="num neg">{{ money(exp) }}</span> · μένουν <b class="num">{{ money(inc - exp) }}</b></p>
+  </div>
+  <div class="divide">
+  {% for r in items %}
+    <div class="flex flex-col gap-2 py-3 lg:flex-row lg:items-center {{ '' if r.active else 'opacity-60' }}">
+      <div class="flex items-center gap-3 lg:w-48">
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-surface-container text-label-lg dark:bg-surface-dark">{{ '%02d'|format(r.day) }}</span>
+        {% if not r.active %}<span class="badge-muted">σε παύση</span>
+        {% elif r.id in posted %}<span class="badge-ok">Περάστηκε {{ posted[r.id][8:] }}/{{ posted[r.id][5:7] }}</span>
+        {% else %}<span class="badge-warn">Εκκρεμεί</span>{% endif %}
+      </div>
+      <form method="post" class="grid flex-1 grid-cols-2 items-center gap-2 sm:grid-cols-[1fr_auto_1fr_auto_auto_auto]">
+        <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+        <input type="hidden" name="id" value="{{ r.id }}">
+        <input name="name" value="{{ r.name }}" required maxlength="60" class="input input-sm h-10 col-span-2 sm:col-span-1" aria-label="Όνομα">
+        <input name="amount" inputmode="decimal" value="{{ plain(r.amount_cents) }}" required class="input input-sm h-10 w-full num sm:w-28 {{ 'text-income-positive' if r.kind == 'income' else 'text-expense-negative' }}" aria-label="Ποσό">
+        <select name="category_id" class="input input-sm h-10" aria-label="Κατηγορία">
+          {% for c in cats if c.kind == r.kind %}<option value="{{ c.id }}" {{ 'selected' if c.id == r.category_id }}>{{ c.icon }} {{ c.name }}</option>{% endfor %}
+        </select>
+        <input type="number" name="day" min="1" max="31" value="{{ r.day }}" class="input input-sm h-10 w-full sm:w-20" aria-label="Ημέρα του μήνα" title="Ημέρα του μήνα (1–31)">
+        <select name="active" class="input input-sm h-10" aria-label="Κατάσταση"><option value="1" {{ 'selected' if r.active }}>ενεργό</option><option value="0" {{ 'selected' if not r.active }}>σε παύση</option></select>
+        <button class="btn-secondary btn-sm col-span-2 sm:col-span-1">Αποθήκευση</button>
+      </form>
+      <form method="post" action="{{ url_for('recurring_delete', rec_id=r.id) }}" data-confirm="Διαγραφή «{{ r.name }}»; (οι κινήσεις που έχουν ήδη περαστεί μένουν)">
+        <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+        <button class="btn-danger btn-sm" aria-label="Διαγραφή">{{ icon('trash-2', 'icon-sm') }}</button>
+      </form>
+    </div>
+  {% else %}
+    <div class="empty"><p class="text-title-md">Κανένα πάγιο ακόμα</p><p class="mt-1 text-body-md muted">Πρόσθεσε μισθό, ενοίκιο, συνδρομές…</p></div>
+  {% endfor %}
+  </div>
+</section>
+{% endblock %}

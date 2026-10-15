@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block body %}
+<section class="auth-card">
+  <span class="mb-4 grid h-12 w-12 place-items-center rounded-full bg-primary/10 text-primary">{{ icon('lock', 'h-6 w-6') }}</span>
+  <h1 class="text-headline-lg">Κωδικός 2FA</h1>
+  <p class="mb-5 mt-1 text-body-md muted">Γράψε τον 6ψήφιο κωδικό από την εφαρμογή authenticator.</p>
+  <form method="post" action="{{ url_for('auth.mfa') }}" class="flex flex-col gap-4">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="next" value="{{ next }}">
+    <input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]{6,7}" maxlength="7" required autofocus placeholder="••••••" class="code-input" data-otp aria-label="6ψήφιος κωδικός">
+    <button class="btn-primary btn-block h-12">Επιβεβαίωση</button>
+  </form>
+  <details class="mt-5">
+    <summary class="cursor-pointer text-label-lg text-primary">Έχασες το κινητό; Χρήση κωδικού ανάκτησης</summary>
+    <form method="post" action="{{ url_for('auth.recovery_code') }}" class="mt-3 flex flex-col gap-3">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <input name="code" autocomplete="off" maxlength="20" placeholder="xxxxx-xxxxx" required class="input font-mono">
+      <button class="btn-secondary btn-block">Είσοδος με κωδικό ανάκτησης</button>
+    </form>
+  </details>
+  <form method="post" action="{{ url_for('auth.logout') }}" class="mt-4 text-center">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <button class="link text-label-md">Ακύρωση</button>
+  </form>
+</section>
+{% endblock %}

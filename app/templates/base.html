@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="el" class="{{ theme_class }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="{{ S.accent }}">
+<title>{% block title %}{{ S.title }}{% endblock %}</title>
+<link rel="icon" href="{{ url_for('static', filename='brand/favicon.svg') }}" type="image/svg+xml">
+<link rel="icon" href="{{ url_for('static', filename='brand/favicon-32.png') }}" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='brand/apple-touch-icon.png') }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+<style>:root { --accent: {{ accent_rgb }}; }</style>
+<script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+{% set app_shell = user and not user.mfa_pending %}
+<body>
+{% macro flashes() %}
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, m in msgs %}
+      <div class="flash {{ 'toast-ok' if cat == 'ok' else 'toast-err' }}" role="status">
+        {{ icon('circle-check' if cat == 'ok' else 'circle-alert', 'icon mt-px') }}<span>{{ m }}</span>
+      </div>
+    {% endfor %}
+  {% endwith %}
+{% endmacro %}
+
+{% if app_shell %}
+  {# ---------- desktop sidebar ---------- #}
+  <aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-border-light bg-surface-light px-4 py-6 dark:border-border-dark dark:bg-surface-subtle-dark lg:flex">
+    <a href="{{ url_for('dashboard') }}" class="mb-6 flex items-center gap-3 px-2">
+      <img src="{{ url_for('static', filename='brand/mark.svg') }}" alt="" class="h-10 w-10 shrink-0">
+      <span class="min-w-0"><span class="block truncate text-headline-md text-primary">{{ S.title }}</span>
+        <span class="block text-body-sm muted">Oikonomy</span></span>
+    </a>
+    <button type="button" class="btn-primary btn-block mb-6" data-open-sheet>{{ icon('plus') }} Νέα κίνηση</button>
+    <nav class="flex flex-1 flex-col gap-1">
+      <a href="{{ url_for('dashboard') }}" class="nav-link {{ 'nav-on' if is_on('dashboard') }}">{{ icon('calendar') }} Μήνας</a>
+      <a href="{{ url_for('transactions') }}" class="nav-link {{ 'nav-on' if is_on('transactions', 'tx_edit') }}">{{ icon('arrow-left-right') }} Κινήσεις</a>
+      <a href="{{ url_for('scan_page') }}" class="nav-link {{ 'nav-on' if is_on('scan_page', 'scan_import') }}">{{ icon('scan-line') }} Σάρωση</a>
+      <a href="{{ url_for('categories') }}" class="nav-link {{ 'nav-on' if is_on('categories') }}">{{ icon('shapes') }} Κατηγορίες</a>
+      <a href="{{ url_for('recurring') }}" class="nav-link {{ 'nav-on' if is_on('recurring') }}">{{ icon('repeat') }} Πάγια</a>
+      <a href="{{ url_for('settings') }}" class="nav-link {{ 'nav-on' if is_on('settings') }}">{{ icon('settings') }} Ρυθμίσεις</a>
+    </nav>
+    <div class="border-t border-border-light pt-4 dark:border-border-dark">
+      <a href="{{ url_for('auth.account') }}" class="nav-link h-auto py-2 {{ 'nav-on' if request.endpoint and request.endpoint.startswith('auth.') }}">
+        <span class="grid h-9 w-9 place-items-center rounded-full bg-primary/10 text-label-lg text-primary">{{ user_initials }}</span>
+        <span class="min-w-0"><span class="block text-label-lg">Λογαριασμός</span><span class="block truncate text-body-sm muted">{{ user_email }}</span></span>
+      </a>
+      <form method="post" action="{{ url_for('auth.logout') }}">
+        <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+        <button class="nav-link w-full">{{ icon('log-out') }} Αποσύνδεση</button>
+      </form>
+    </div>
+  </aside>
+
+  <div class="lg:pl-64">
+    {% block topbar %}{% endblock %}
+    <main class="mx-auto max-w-content px-4 pb-28 pt-4 lg:px-8 lg:pb-12 lg:pt-8">
+      {{ flashes() }}
+      {% block body %}{% endblock %}
+    </main>
+  </div>
+
+  {# ---------- mobile bottom tab bar ---------- #}
+  <nav class="fixed inset-x-0 bottom-0 z-30 grid h-16 grid-cols-5 border-t border-border-light bg-surface-light/95 backdrop-blur dark:border-border-dark dark:bg-surface-subtle-dark/95 lg:hidden" aria-label="Κύρια πλοήγηση">
+    <a href="{{ url_for('dashboard') }}" class="tab {{ 'tab-on' if is_on('dashboard') }}">{{ icon('layout-grid') }}Μήνας</a>
+    <a href="{{ url_for('transactions') }}" class="tab {{ 'tab-on' if is_on('transactions', 'tx_edit') }}">{{ icon('receipt') }}Κινήσεις</a>
+    <div class="grid place-items-center">
+      <button type="button" class="-mt-6 grid h-14 w-14 place-items-center rounded-full bg-primary text-white shadow-lg" data-open-sheet aria-label="Νέα κίνηση">{{ icon('plus', 'h-7 w-7') }}</button>
+    </div>
+    <a href="{{ url_for('scan_page') }}" class="tab {{ 'tab-on' if is_on('scan_page', 'scan_import') }}">{{ icon('scan-line') }}Σάρωση</a>
+    <a href="{{ url_for('more') }}" class="tab {{ 'tab-on' if is_on('more', 'categories', 'recurring', 'settings') or (request.endpoint and request.endpoint.startswith('auth.')) }}">{{ icon('ellipsis') }}Περισσότερα</a>
+  </nav>
+
+  {# ---------- add-transaction sheet (bottom sheet on mobile, modal on desktop) ---------- #}
+  <dialog id="add-sheet" class="sheet" aria-labelledby="add-sheet-title">
+    {% if sheet_cats %}
+    <form method="post" action="{{ url_for('tx_add') }}" class="flex flex-col gap-4 p-5 sm:p-6" data-kind-form>
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <input type="hidden" name="next" value="{{ request.full_path if request.method == 'GET' and not request.endpoint.startswith('auth.') else url_for('dashboard') }}">
+      <div class="flex items-center justify-between">
+        <h2 id="add-sheet-title" class="text-headline-md">Νέα κίνηση</h2>
+        <button type="button" class="btn-ghost btn-sm" data-close-sheet aria-label="Κλείσιμο">{{ icon('x') }}</button>
+      </div>
+      <div class="seg">
+        <label><input type="radio" name="kind" value="expense" checked><span class="exp">− Έξοδο</span></label>
+        <label><input type="radio" name="kind" value="income"><span class="inc">+ Έσοδο</span></label>
+      </div>
+      <label class="relative block">
+        <span class="label">Ποσό</span>
+        <input name="amount" inputmode="decimal" required placeholder="0,00" class="input h-14 pr-10 text-amount-display num" autocomplete="off">
+        <span class="pointer-events-none absolute bottom-3.5 right-3 text-headline-md muted">{{ S.currency }}</span>
+      </label>
+      <label><span class="label">Κατηγορία</span>
+        <select name="category_id" class="input" required>
+          {% for c in sheet_cats %}<option value="{{ c.id }}" data-kind="{{ c.kind }}">{{ c.icon }} {{ c.name }}</option>{% endfor %}
+        </select></label>
+      <div>
+        <span class="label">Ημερομηνία</span>
+        <div class="flex gap-2">
+          <input type="date" name="tdate" value="{{ today_iso }}" required class="input flex-1" data-date-input>
+          <button type="button" class="chip" data-date-chip="0">Σήμερα</button>
+          <button type="button" class="chip" data-date-chip="-1">Χθες</button>
+        </div>
+      </div>
+      <label><span class="label">Σημείωση</span><input name="note" maxlength="200" placeholder="προαιρετικό" class="input"></label>
+      <button class="btn-primary btn-block h-12">Καταχώρηση</button>
+    </form>
+    {% else %}
+    <div class="p-6">
+      <p class="mb-4">Άνοιξε την αρχική για να προσθέσεις κίνηση.</p>
+      <a class="btn-primary btn-block" href="{{ url_for('dashboard') }}">Αρχική</a>
+    </div>
+    {% endif %}
+  </dialog>
+{% else %}
+  {# ---------- auth / public layout: centred card ---------- #}
+  <main class="flex min-h-screen flex-col items-center justify-center px-4 py-10">
+    <div class="mb-6 flex items-center gap-3">
+      <img src="{{ url_for('static', filename='brand/mark.svg') }}" alt="" class="h-12 w-12">
+      <span class="text-headline-lg text-text-primary-light dark:text-text-primary-dark">Oikonomy</span>
+    </div>
+    <div class="w-full max-w-[420px]">{{ flashes() }}</div>
+    {{ self.body() }}
+  </main>
+{% endif %}
+</body>
+</html>

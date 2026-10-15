@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block body %}
+<section class="auth-card text-center">
+  <span class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-primary">{{ icon('mail', 'h-7 w-7') }}</span>
+  <h1 class="text-headline-md">📬 Δες τα email σου</h1>
+  {% if reset %}
+  <p class="mt-2 text-body-md secondary">Αν υπάρχει λογαριασμός με αυτό το email, σου στείλαμε σύνδεσμο για νέο κωδικό. Ισχύει 1 ώρα.</p>
+  {% else %}
+  <p class="mt-2 text-body-md secondary">Σου στείλαμε σύνδεσμο επιβεβαίωσης. Πάτα τον για να ενεργοποιηθεί ο λογαριασμός σου.</p>
+  <p class="mt-2 text-body-sm muted">Αν έχεις ήδη λογαριασμό με αυτό το email, απλώς <a class="link" href="{{ url_for('auth.login') }}">συνδέσου</a>.</p>
+  {% endif %}
+  <p class="mt-4 text-body-sm muted">Δεν ήρθε; Κοίτα και στα ανεπιθύμητα (spam).</p>
+  <a class="btn-secondary btn-block mt-6" href="{{ url_for('auth.login') }}">Πίσω στη σύνδεση</a>
+</section>
+{% endblock %}

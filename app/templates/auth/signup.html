@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Εγγραφή — {{ S.title }}{% endblock %}
+{% block body %}
+<section class="auth-card">
+  <h1 class="text-headline-lg">Νέος λογαριασμός</h1>
+  <p class="mb-5 mt-1 text-body-md muted">Κλειστή beta — χρειάζεσαι κωδικό πρόσκλησης.</p>
+  <form method="post" action="{{ url_for('auth.signup') }}" class="flex flex-col gap-4">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <label><span class="label">Κωδικός πρόσκλησης</span><input name="invite" autocomplete="off" required maxlength="100" class="input"></label>
+    <label><span class="label">Email</span><input type="email" name="email" value="{{ email }}" autocomplete="email" required maxlength="254" class="input"></label>
+    <label><span class="label">Κωδικός</span>
+      <input type="password" name="password" autocomplete="new-password" required minlength="10" maxlength="72" class="input">
+      <span class="mt-1 block text-body-sm muted">Τουλάχιστον 10 χαρακτήρες, με γράμματα και αριθμούς. Κωδικοί που έχουν διαρρεύσει απορρίπτονται.</span></label>
+    <label><span class="label">Ξανά ο κωδικός</span><input type="password" name="password2" autocomplete="new-password" required minlength="10" maxlength="72" class="input"></label>
+    {% include "auth/_turnstile.html" %}
+    <button class="btn-primary btn-block h-12">Δημιουργία λογαριασμού</button>
+  </form>
+  {% if GOOGLE_ENABLED %}
+  <div class="my-4 flex items-center gap-3 text-body-sm muted"><span class="h-px flex-1 bg-border-light dark:bg-border-dark"></span>ή<span class="h-px flex-1 bg-border-light dark:bg-border-dark"></span></div>
+  <a class="btn-secondary btn-block h-12" href="{{ url_for('auth.google') }}">Συνέχεια με Google</a>
+  {% endif %}
+  <p class="mt-6 text-center text-body-md muted">Έχεις ήδη λογαριασμό; <a class="link" href="{{ url_for('auth.login') }}">Σύνδεση</a></p>
+</section>
+{% endblock %}

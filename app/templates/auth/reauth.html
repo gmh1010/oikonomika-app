@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block body %}
+<section class="auth-card mx-auto">
+  <span class="mb-4 grid h-12 w-12 place-items-center rounded-full bg-primary/10 text-primary">{{ icon('shield-check', 'h-6 w-6') }}</span>
+  <h1 class="text-headline-lg">Επιβεβαίωση ταυτότητας</h1>
+  <p class="mb-5 mt-1 text-body-md muted">Για την ασφάλειά σου, ξαναγράψε τα στοιχεία σου πριν από αυτή την αλλαγή.</p>
+  {% if has_password %}
+  <form method="post" action="{{ url_for('auth.reauth') }}" class="flex flex-col gap-4">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="next" value="{{ next }}">
+    <label><span class="label">Κωδικός</span><input type="password" name="password" autocomplete="current-password" required autofocus class="input"></label>
+    {% if mfa_on %}<label><span class="label">Κωδικός 2FA</span><input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required class="code-input" data-otp placeholder="••••••"></label>{% endif %}
+    <button class="btn-primary btn-block h-12">Συνέχεια</button>
+  </form>
+  {% else %}
+  <a class="btn-secondary btn-block h-12" href="{{ url_for('auth.google', reauth=1, next=next) }}">Επιβεβαίωση με Google</a>
+  {% endif %}
+</section>
+{% endblock %}

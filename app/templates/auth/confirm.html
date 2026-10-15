@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block body %}
+<section class="auth-card text-center">
+  <span class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-primary">{{ icon('key-round' if type == 'recovery' else 'circle-check', 'h-7 w-7') }}</span>
+  {% if type == "recovery" %}
+  <h1 class="text-headline-md">Νέος κωδικός</h1>
+  <p class="mt-2 text-body-md secondary">Πάτα «Συνέχεια» για να ορίσεις νέο κωδικό.</p>
+  {% else %}
+  <h1 class="text-headline-md">Επιβεβαίωση email</h1>
+  <p class="mt-2 text-body-md secondary">Πάτα «Συνέχεια» για να ενεργοποιήσεις τον λογαριασμό σου.</p>
+  {% endif %}
+  <form method="post" action="{{ url_for('auth.confirm') }}" class="mt-6">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="token_hash" value="{{ token_hash }}">
+    <input type="hidden" name="type" value="{{ type }}">
+    <button class="btn-primary btn-block h-12">Συνέχεια</button>
+  </form>
+</section>
+{% endblock %}

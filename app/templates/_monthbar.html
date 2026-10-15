@@ -1,0 +1,13 @@
+{# Sticky month switcher. Needs: month, endpoint (target view), extra (dict of extra query args). #}
+<div class="sticky top-0 z-20 border-b border-border-light bg-surface-light/95 backdrop-blur dark:border-border-dark dark:bg-surface-subtle-dark/95">
+  <div class="mx-auto flex h-14 max-w-content items-center gap-3 px-4 lg:h-16 lg:px-8">
+    <div class="flex items-center rounded-full border border-border-light bg-surface-light dark:border-border-dark dark:bg-surface-dark">
+      <a class="grid h-10 w-10 place-items-center rounded-full hover:bg-surface-subtle-light dark:hover:bg-surface-subtle-dark" href="{{ url_for(endpoint, m=shift_month(month, -1), **(extra or {})) }}" aria-label="Προηγούμενος μήνας">{{ icon('chevron-left') }}</a>
+      <span class="min-w-[9.5rem] text-center text-title-md lg:min-w-[11rem] lg:text-headline-md">{{ month_label(month) }}</span>
+      <a class="grid h-10 w-10 place-items-center rounded-full hover:bg-surface-subtle-light dark:hover:bg-surface-subtle-dark" href="{{ url_for(endpoint, m=shift_month(month, 1), **(extra or {})) }}" aria-label="Επόμενος μήνας">{{ icon('chevron-right') }}</a>
+    </div>
+    {% if day_of_month %}
+      <span class="badge-muted hidden sm:inline-flex">{{ day_of_month }}/{{ days_in_month }} ημέρες</span>
+    {% endif %}
+  </div>
+</div>

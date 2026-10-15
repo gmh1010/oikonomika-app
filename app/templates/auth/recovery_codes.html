@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block body %}
+<section class="auth-card mx-auto">
+  <span class="mb-4 grid h-12 w-12 place-items-center rounded-full bg-income-positive/10 text-income-positive">{{ icon('circle-check', 'h-6 w-6') }}</span>
+  <h1 class="text-headline-lg">Το 2FA ενεργοποιήθηκε</h1>
+  <p class="mt-2 text-body-md secondary"><b>Φύλαξε αυτούς τους κωδικούς ανάκτησης</b> κάπου ασφαλές. Αν χάσεις το κινητό, μπαίνεις με έναν από αυτούς — ο καθένας δουλεύει μία φορά.</p>
+  <ol id="rcodes" class="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-surface-subtle-light p-4 font-mono text-label-lg dark:bg-surface-dark">{% for c in codes %}<li class="rcode">{{ c }}</li>{% endfor %}</ol>
+  <div class="mt-3 grid grid-cols-2 gap-2">
+    <button type="button" class="btn-secondary" data-copy="#rcodes">{{ icon('copy', 'icon-sm') }} Αντιγραφή</button>
+    <button type="button" class="btn-secondary" data-download="#rcodes">{{ icon('download', 'icon-sm') }} Λήψη .txt</button>
+  </div>
+  <p class="mt-3 text-body-sm muted">Δεν θα τους ξαναδείς. Αν τους χάσεις, απενεργοποίησε και ξαναενεργοποίησε το 2FA για νέους.</p>
+  <label class="mt-4 flex items-center gap-2 text-label-lg"><input type="checkbox" data-gate="#codes-done" class="h-5 w-5 rounded border-border-light text-primary focus:ring-primary"> Τα αποθήκευσα</label>
+  <a id="codes-done" class="btn-primary btn-block mt-4 h-12" href="{{ url_for('auth.account') }}">Συνέχεια</a>
+</section>
+{% endblock %}

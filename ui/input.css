@@ -1,0 +1,128 @@
+/* Inter, self-hosted (no Google Fonts requests). Latin + Latin-ext + Greek subsets, 400-700. */
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 400;
+  src: url("fonts/inter-latin-400-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 500;
+  src: url("fonts/inter-latin-500-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 600;
+  src: url("fonts/inter-latin-600-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 700;
+  src: url("fonts/inter-latin-700-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 400;
+  src: url("fonts/inter-latin-ext-400-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 600;
+  src: url("fonts/inter-latin-ext-600-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 400;
+  src: url("fonts/inter-greek-400-normal.woff2") format("woff2");
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 500;
+  src: url("fonts/inter-greek-500-normal.woff2") format("woff2");
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 600;
+  src: url("fonts/inter-greek-600-normal.woff2") format("woff2");
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 700;
+  src: url("fonts/inter-greek-700-normal.woff2") format("woff2");
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF; }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root { --accent: 37 99 235; color-scheme: light; }
+  .dark { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) { :root:not(.light) { color-scheme: dark; } }
+  html { -webkit-tap-highlight-color: transparent; }
+  body { @apply bg-background font-sans text-body-md text-text-primary-light antialiased dark:bg-surface-dark dark:text-text-primary-dark; }
+  .num, .tabular-nums { font-variant-numeric: tabular-nums; }
+  [hidden] { display: none !important; }
+  dialog::backdrop { background: rgb(17 24 39 / 0.45); }
+  /* Grid/flex children may shrink below their content (long category names in <select>s would
+     otherwise push the page wider than a phone screen). */
+  .grid > *, .flex > * { min-width: 0; }
+  select { text-overflow: ellipsis; }
+  html, body { overflow-x: hidden; }
+}
+
+/* Reusable building blocks of the design system (Stitch "Components Library"). */
+@layer components {
+  .card { @apply rounded-xl border border-border-light bg-surface-light p-5 dark:border-border-dark dark:bg-surface-subtle-dark; }
+  .card-tight { @apply rounded-xl border border-border-light bg-surface-light dark:border-border-dark dark:bg-surface-subtle-dark; }
+  .card-title { @apply text-title-md text-text-primary-light dark:text-text-primary-dark; }
+  .muted { @apply text-text-muted-light dark:text-text-muted-dark; }
+  .secondary { @apply text-text-secondary-light dark:text-text-secondary-dark; }
+  .page-title { @apply text-headline-lg text-text-primary-light dark:text-text-primary-dark; }
+
+  .btn { @apply inline-flex h-11 items-center justify-center gap-2 rounded-lg px-4 text-label-lg font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:opacity-60; }
+  .btn-primary { @apply btn bg-primary text-white hover:bg-primary/90; }
+  .btn-secondary { @apply btn border border-border-light bg-surface-light text-text-primary-light hover:bg-surface-subtle-light dark:border-border-dark dark:bg-surface-subtle-dark dark:text-text-primary-dark dark:hover:bg-surface-dark; }
+  .btn-ghost { @apply btn text-primary hover:bg-primary/10; }
+  .btn-danger { @apply btn border border-expense-negative/40 bg-transparent text-expense-negative hover:bg-expense-negative/10; }
+  .btn-warn { @apply btn bg-warning-pending text-white hover:bg-warning-pending/90; }
+  .btn-sm { @apply h-9 px-3 text-label-md; }
+  .btn-block { @apply w-full; }
+  .link { @apply font-medium text-primary hover:underline; }
+
+  .label { @apply mb-1 block text-label-md text-text-secondary-light dark:text-text-secondary-dark; }
+  .input { @apply block h-11 w-full rounded-lg border border-border-light bg-surface-light px-3 text-body-lg text-text-primary-light placeholder:text-text-muted-light focus:border-primary focus:ring-2 focus:ring-primary/30 dark:border-border-dark dark:bg-surface-dark dark:text-text-primary-dark dark:placeholder:text-text-muted-dark; }
+  .input-sm { @apply h-9 text-body-md; }
+  select.input { @apply pr-9; }
+  .code-input { @apply input h-14 text-center font-mono text-[28px] tracking-[0.5em]; }
+
+  .seg { @apply grid grid-cols-2 gap-1 rounded-lg bg-surface-container p-1 dark:bg-surface-dark; }
+  .seg input { @apply sr-only; }
+  .seg span { @apply flex h-10 cursor-pointer items-center justify-center rounded-md text-label-lg text-text-secondary-light dark:text-text-secondary-dark; }
+  .seg input:checked + span.exp { @apply bg-surface-light text-expense-negative shadow-sm dark:bg-surface-subtle-dark; }
+  .seg input:checked + span.inc { @apply bg-surface-light text-income-positive shadow-sm dark:bg-surface-subtle-dark; }
+  .seg input:checked + span.plain { @apply bg-surface-light text-primary shadow-sm dark:bg-surface-subtle-dark; }
+
+  .chip { @apply inline-flex h-8 items-center gap-1 rounded-full border border-border-light px-3 text-label-md text-text-secondary-light hover:bg-surface-subtle-light dark:border-border-dark dark:text-text-secondary-dark dark:hover:bg-surface-dark; }
+  .chip-on { @apply border-transparent bg-text-primary-light text-white dark:bg-text-primary-dark dark:text-surface-dark; }
+  .badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-label-md; }
+  .badge-ok { @apply badge bg-income-positive/10 text-income-positive; }
+  .badge-warn { @apply badge bg-warning-pending/15 text-warning-pending; }
+  .badge-bad { @apply badge bg-expense-negative/10 text-expense-negative; }
+  .badge-muted { @apply badge bg-surface-container text-text-secondary-light dark:bg-surface-dark dark:text-text-secondary-dark; }
+
+  .kpi { @apply card flex flex-col gap-1 p-4 lg:p-5; }
+  .kpi-label { @apply flex items-center justify-between text-label-md text-text-secondary-light dark:text-text-secondary-dark; }
+  .kpi-value { @apply num text-headline-md lg:text-[28px] lg:leading-9 font-semibold; }
+  .kpi-sub { @apply flex justify-between text-body-sm text-text-muted-light dark:text-text-muted-dark; }
+  .pos { @apply text-income-positive; }
+  .neg { @apply text-expense-negative; }
+
+  .track { @apply mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-container dark:bg-surface-dark; }
+  .fill { @apply h-full rounded-full; }
+  .fill-over { @apply bg-expense-negative; }
+
+  .row { @apply flex items-center gap-3 py-3; }
+  .avatar { @apply grid h-10 w-10 shrink-0 place-items-center rounded-full text-[18px]; }
+  .divide { @apply divide-y divide-border-light dark:divide-border-dark; }
+
+  .nav-link { @apply flex h-11 items-center gap-3 rounded-lg px-3 text-label-lg text-text-secondary-light hover:bg-surface-subtle-light dark:text-text-secondary-dark dark:hover:bg-surface-subtle-dark; }
+  .nav-on { @apply bg-primary/10 text-primary dark:bg-primary/15 dark:text-primary; }
+  .tab { @apply flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-text-muted-light dark:text-text-muted-dark; }
+  .tab-on { @apply text-primary; }
+
+  .toast { @apply mb-4 flex items-start gap-2 rounded-xl border px-4 py-3 text-label-lg; }
+  .toast-ok { @apply toast border-income-positive/30 bg-income-positive/10 text-income-positive; }
+  .toast-err { @apply toast border-expense-negative/30 bg-expense-negative/10 text-expense-negative; }
+  .warn-card { @apply rounded-xl border border-warning-pending/40 bg-warning-pending/10 p-4 lg:p-5; }
+  .empty { @apply rounded-xl border border-dashed border-border-light p-8 text-center dark:border-border-dark; }
+
+  .sheet { @apply m-0 mt-auto w-full max-w-none rounded-t-2xl border-0 bg-surface-light p-0 text-text-primary-light dark:bg-surface-subtle-dark dark:text-text-primary-dark sm:m-auto sm:max-w-lg sm:rounded-2xl; }
+  .icon { @apply h-5 w-5 shrink-0; }
+  .icon-sm { @apply h-4 w-4 shrink-0; }
+  .auth-card { @apply card mx-auto w-full max-w-[420px] p-6 sm:p-8; }
+}
+
+@layer components {
+  .icon-in.target { @apply ring-2 ring-primary; }
+  .picker-btn { @apply grid h-10 w-10 place-items-center rounded-lg border border-border-light bg-surface-subtle-light text-[20px] hover:border-primary dark:border-border-dark dark:bg-surface-dark; }
+}

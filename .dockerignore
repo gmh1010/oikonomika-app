@@ -1,0 +1,14 @@
+.git
+.venv
+.secrets
+.worktrees
+design
+docs
+supabase
+ui
+**/__pycache__
+**/.pytest_cache
+**/.playwright-mcp
+app/.env
+app/tests
+app/run_dev.py
